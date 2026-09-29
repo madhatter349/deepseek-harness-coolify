@@ -163,19 +163,23 @@ default to its first model. No credentials are ever typed into the UI.
 | `DSH_COOKIE_MAX_AGE_DAYS` | `365` | Browser-session cookie lifetime |
 | `DSH_LLM_BASE_URL` | `https://api.deepseek.com/v1` | OpenAI-compatible API root |
 | `DSH_LLM_API_KEY` | – | Bearer token (credential reference `DSH_LLM_API_KEY`) |
-| `DSH_LLM_MODELS` | `deepseek-v4.1-flash` | Comma-separated model ids offered |
-| `DSH_LLM_PROVIDER_NAME` | `DSH Gateway` | Label in the Models page |
-| `DSH_LLM_CONTEXT_WINDOW` | `131072` | Fallback context capacity |
-| `DSH_LLM_MAX_OUTPUT_TOKENS` | `8192` | Fallback output capacity |
+| `DSH_LLM_CONTEXT_WINDOW` | `131072` | Fallback context capacity for models without one |
+| `DSH_LLM_MAX_OUTPUT_TOKENS` | `8192` | Fallback output cap for models without one |
 | `DSH_TELEMETRY_DISABLED` | `1` | Disables OTel delivery |
 | `DSH_SESSION_LOG_UPLOAD` | `0` | DeepSeek official session-log upload opt-in |
 
-Model changes via **Settings → Models** persist to
-`$DSH_HOME/profiles/web/cordis.patch.yml` on the volume; the environment values
-are the first-boot seed and remain editable there.
+The model catalogue lives in the profile patch
+`$DSH_HOME/profiles/web/cordis.patch.yml` on the volume (seeded once from
+`deploy/profile.seed.patch.yml`); edit that file to add or remove models. The
+deployment overlay enables HMR polling, so patch edits apply without a restart.
 
 ## Model gateway notes
 
+- The seeded catalogue copies the pi agent's `cheapestinference-gateway`
+  provider: `deepseek-v4.1-flash` (1M context) and `mimo-v2.6-flash`
+  (1M context, image input), with their reasoning levels and compatibility
+  switches. Edit `$DSH_HOME/profiles/web/cordis.patch.yml` to add or remove
+  models; HMR polling applies the edit live.
 - The route uses **OpenAI Chat Completions** (`openai-completions`), which
   covers the DeepSeek official API, a CheapestInference/queue gateway, LiteLLM,
   vLLM, OpenRouter and similar relays.
@@ -204,8 +208,9 @@ durable settings — form writes are inert".
 
 The env-configured provider still works, and new sessions still default to its
 first model. To add or change providers while remote, edit
-`$DSH_HOME/profiles/web/cordis.patch.yml` directly — the web profile hot-reloads
-it — for example from the Web UI's terminal sidebar:
+`$DSH_HOME/profiles/web/cordis.patch.yml` directly — the deployment overlay
+enables HMR polling, so edits apply live — for example from the Web UI's
+terminal sidebar:
 
 ```yaml
 - id: llm-pi-ai

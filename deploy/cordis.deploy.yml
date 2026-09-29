@@ -38,3 +38,15 @@
 - id: session-log-deepseek
   config:
     enabled: !!js process.env.DSH_SESSION_LOG_UPLOAD === '1'
+
+# ── Live configuration reload ───────────────────────────────────────────────
+# The web profile watches its profile/home patch files and hot-reloads edits.
+# chokidar's inotify watches did not observe writes to the Docker volume in
+# this environment (the file inode was never watched), so configuration
+# watching polls instead. `root: []` keeps module watching off — only the
+# explicit profile/home patch watches run.
+- id: hmr
+  config:
+    root: []
+    usePolling: true
+    interval: 1000

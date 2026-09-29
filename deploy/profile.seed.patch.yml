@@ -1,37 +1,73 @@
 # First-boot seed for $DSH_HOME/profiles/web/cordis.patch.yml.
 #
-# Everything model-specific is read from the environment:
+# Model catalogue copied from the pi agent's `cheapestinference-gateway`
+# provider: DeepSeek V4.1 Flash and MiMo V2.6 Flash, with their capacities,
+# modalities, reasoning levels and wire-compatibility switches. The endpoint
+# and secret stay environment-driven:
 #
-#   DSH_LLM_BASE_URL           OpenAI-compatible API root, e.g.
-#                              https://inference.example.com/v1
-#                              https://api.deepseek.com/v1
-#   DSH_LLM_API_KEY            bearer token (credential reference only —
-#                              never written to any file by this image)
-#   DSH_LLM_MODELS             comma-separated model ids
-#   DSH_LLM_PROVIDER_NAME      display label in the Models page
-#   DSH_LLM_CONTEXT_WINDOW     fallback context capacity in tokens
-#   DSH_LLM_MAX_OUTPUT_TOKENS  fallback output capacity in tokens
+#   DSH_LLM_BASE_URL           OpenAI-compatible API root
+#   DSH_LLM_API_KEY            bearer token (reference only; never stored here)
+#   DSH_LLM_CONTEXT_WINDOW     fallback capacity for models without one
+#   DSH_LLM_MAX_OUTPUT_TOKENS  fallback output cap for models without one
 #
-# The route id `dsh-gateway` is also the default for new sessions. This file
-# is seeded once; later edits through Settings → Models persist on the volume.
+# This file is seeded once; later edits to it (or through Settings → Models
+# on a loopback browser) persist on the volume. Model changes are made here,
+# not through the environment.
 #
 # NOTE: `dsh-llm-pi-ai` speaks one wire protocol per route. This one uses
-# `openai-completions`, which covers the DeepSeek official API, the
-# CheapestInference gateway and any OpenAI Chat Completions relay.
+# `openai-completions`, which covers the CheapestInference gateway, the
+# DeepSeek official API and any OpenAI Chat Completions relay.
 
 - id: llm-pi-ai
   config:
     providers:
       dsh-gateway:
         apiKeyEnv: DSH_LLM_API_KEY
-        displayName: !!js process.env.DSH_LLM_PROVIDER_NAME ?? 'DSH Gateway'
+        displayName: CI Gateway (queue)
         api: openai-completions
         baseURL: !!js process.env.DSH_LLM_BASE_URL ?? 'https://api.deepseek.com/v1'
         defaultContextWindow: !!js Number(process.env.DSH_LLM_CONTEXT_WINDOW ?? 131072)
         defaultMaxTokens: !!js Number(process.env.DSH_LLM_MAX_OUTPUT_TOKENS ?? 8192)
-        models: !!js "(process.env.DSH_LLM_MODELS ?? 'deepseek-v4.1-flash').split(',').map(s => ({ id: s.trim() })).filter(m => m.id.length > 0)"
+        compat:
+          supportsStore: false
+          supportsDeveloperRole: false
+          supportsReasoningEffort: true
+          supportsUsageInStreaming: true
+          supportsFinishReason: true
+          maxTokensField: max_tokens
+          thinkingFormat: deepseek
+        models:
+          - id: deepseek-v4.1-flash
+            name: DeepSeek V4.1 Flash (Gateway)
+            contextWindow: 1000000
+            maxTokens: 8192
+            input: [text]
+            reasoningEfforts:
+              off:
+              minimal: minimal
+              low: low
+              medium: medium
+              high: high
+              xhigh: xhigh
+              max: max
+            compat:
+              requiresReasoningContentOnAssistantMessages: true
+          - id: mimo-v2.6-flash
+            name: MiMo V2.6 Flash (Gateway)
+            contextWindow: 1048576
+            maxTokens: 16384
+            input: [text, image]
+            reasoningEfforts:
+              minimal: low
+              low: low
+              medium: medium
+              high: high
+              xhigh: high
+              max: high
+            compat:
+              requiresReasoningContentOnAssistantMessages: true
 
 - id: agent-default-model
   config:
     provider: dsh-gateway
-    model: !!js ((process.env.DSH_LLM_MODELS ?? 'deepseek-v4.1-flash').split(',')[0] ?? 'deepseek-v4.1-flash').trim()
+    model: deepseek-v4.1-flash
