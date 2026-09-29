@@ -137,38 +137,40 @@
               xhigh: xhigh
               max: max
 
-      # ── ClinePass (currently HTTP 402: account balance is negative) ──────
-      # Uncomment after topping up, then restart:
-      # dsh-cline:
-      #   apiKeyEnv: DSH_CLINE_API_KEY
-      #   displayName: ClinePass
-      #   api: openai-completions
-      #   baseURL: https://api.cline.bot/api/v1
-      #   models:
-      #     - id: deepseek/deepseek-v4.1-flash
-      #       name: DeepSeek V4.1 Flash (Cline)
-      #       contextWindow: 1000000
-      #       maxTokens: 16384
-      #       input: [text]
-      #       reasoningEfforts:
-      #         minimal: low
-      #         low: low
-      #         medium: medium
-      #         high: high
-      #         xhigh: xhigh
-      #         max: max
-      #     - id: xiaomi/mimo-v2.6-flash
-      #       name: MiMo V2.6 Flash (Cline)
-      #       contextWindow: 1048576
-      #       maxTokens: 16384
-      #       input: [text, image]
-      #       reasoningEfforts:
-      #         minimal: low
-      #         low: low
-      #         medium: medium
-      #         high: high
-      #         xhigh: xhigh
-      #         max: max
+      # ── ClinePass (works on the streaming promo route) ──────────────────
+      # Use the prefixed `cline-pass/…` ids with streaming exactly as pi does.
+      # The canonical `deepseek/…`/`xiaomi/…` ids bill Cline Credits and
+      # answer HTTP 402 at a negative balance — do not switch to them.
+      dsh-cline:
+        apiKeyEnv: DSH_CLINE_API_KEY
+        displayName: ClinePass
+        api: openai-completions
+        baseURL: https://api.cline.bot/api/v1
+        models:
+          - id: cline-pass/deepseek-v4.1-flash
+            name: DeepSeek V4.1 Flash (Cline)
+            contextWindow: 1000000
+            maxTokens: 16384
+            input: [text]
+            reasoningEfforts:
+              minimal: low
+              low: low
+              medium: medium
+              high: high
+              xhigh: xhigh
+              max: max
+          - id: cline-pass/mimo-v2.6-flash
+            name: MiMo V2.6 Flash (Cline)
+            contextWindow: 1048576
+            maxTokens: 16384
+            input: [text, image]
+            reasoningEfforts:
+              minimal: low
+              low: low
+              medium: medium
+              high: high
+              xhigh: xhigh
+              max: max
 
 - id: agent-default-model
   config:

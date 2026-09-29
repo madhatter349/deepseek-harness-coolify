@@ -165,7 +165,7 @@ default to its first model. No credentials are ever typed into the UI.
 | `DSH_LLM_API_KEY` | – | Bearer token (credential reference `DSH_LLM_API_KEY`) |
 | `DSH_AMD_API_KEY` | – | AMD Radeon developer API token |
 | `DSH_OPENCODE_API_KEY` | – | OpenCode Zen token (`x-opencode-session` header is in the patch) |
-| `DSH_CLINE_API_KEY` | – | ClinePass token (route commented out until the account balance is positive) |
+| `DSH_CLINE_API_KEY` | – | ClinePass token (streams on the `cline-pass/…` promo route) |
 | `DSH_LLM_CONTEXT_WINDOW` | `131072` | Fallback context capacity for models without one |
 | `DSH_LLM_MAX_OUTPUT_TOKENS` | `8192` | Fallback output cap for models without one |
 | `DSH_TELEMETRY_DISABLED` | `1` | Disables OTel delivery |
@@ -187,7 +187,7 @@ applies default-model edits live; provider-route edits need the restart.
   | CI Gateway (queue) | `deepseek-v4.1-flash`, `mimo-v2.6-flash` |
   | AMD Radeon | `DeepSeek-V4.1-Flash`, `MiMo-V2.6-Flash` |
   | OpenCode Go | `deepseek-v4.1-flash` |
-  | ClinePass | `deepseek/deepseek-v4.1-flash`, `xiaomi/mimo-v2.6-flash` (commented out: HTTP 402 balance) |
+  | ClinePass | `cline-pass/deepseek-v4.1-flash`, `cline-pass/mimo-v2.6-flash` (streaming promo route) |
 
   The misnamed, unconfigured official DeepSeek entries (`DeepSeek-V41-Flash`,
   `DeepSeek-V4-Pro`) are hidden by `llm-deepseek: disabled`; remove that row
