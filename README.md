@@ -170,8 +170,9 @@ default to its first model. No credentials are ever typed into the UI.
 
 The model catalogue lives in the profile patch
 `$DSH_HOME/profiles/web/cordis.patch.yml` on the volume (seeded once from
-`deploy/profile.seed.patch.yml`); edit that file to add or remove models. The
-deployment overlay enables HMR polling, so patch edits apply without a restart.
+`deploy/profile.seed.patch.yml`); edit that file to add or remove models, then
+restart the container. The deployment overlay enables HMR polling, which
+applies default-model edits live; provider-route edits need the restart.
 
 ## Model gateway notes
 
@@ -179,7 +180,9 @@ deployment overlay enables HMR polling, so patch edits apply without a restart.
   provider: `deepseek-v4.1-flash` (1M context) and `mimo-v2.6-flash`
   (1M context, image input), with their reasoning levels and compatibility
   switches. Edit `$DSH_HOME/profiles/web/cordis.patch.yml` to add or remove
-  models; HMR polling applies the edit live.
+  models, then restart the container (`docker restart <container>`) — on
+  0.2.0-rc.2 the `llm-pi-ai` provider route does not re-register on a hot
+  patch edit.
 - The route uses **OpenAI Chat Completions** (`openai-completions`), which
   covers the DeepSeek official API, a CheapestInference/queue gateway, LiteLLM,
   vLLM, OpenRouter and similar relays.
@@ -208,9 +211,8 @@ durable settings — form writes are inert".
 
 The env-configured provider still works, and new sessions still default to its
 first model. To add or change providers while remote, edit
-`$DSH_HOME/profiles/web/cordis.patch.yml` directly — the deployment overlay
-enables HMR polling, so edits apply live — for example from the Web UI's
-terminal sidebar:
+`$DSH_HOME/profiles/web/cordis.patch.yml` directly — for example from the Web
+UI's terminal sidebar — and restart the container after the edit:
 
 ```yaml
 - id: llm-pi-ai
