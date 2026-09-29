@@ -191,6 +191,38 @@ are the first-boot seed and remain editable there.
   levels. A DeepSeek model that always thinks can be corrected with
   `compat.thinkingFormat: deepseek` in the same profile patch.
 
+### Remote browsers cannot open Host settings
+
+dsh enables the editable Host settings document only for loopback page
+origins (`ctx.remote.$host.isLoopback`, i.e. `localhost`, `127.0.0.0/8`, or
+`[::1]`). Browsing through the public Coolify domain therefore shows
+**"Loading the provider directory failed: settings are unavailable in this
+browser"** on Settings → Models, and plugin configuration forms stay
+unavailable. This is upstream behavior, not a deployment fault:
+`packages/client/ui-settings/README.md` states "Non-loopback pages get no
+durable settings — form writes are inert".
+
+The env-configured provider still works, and new sessions still default to its
+first model. To add or change providers while remote, edit
+`$DSH_HOME/profiles/web/cordis.patch.yml` directly — the web profile hot-reloads
+it — for example from the Web UI's terminal sidebar:
+
+```yaml
+- id: llm-pi-ai
+  config:
+    providers:
+      dsh-gateway:
+        apiKeyEnv: DSH_LLM_API_KEY
+        api: openai-completions
+        baseURL: !!js process.env.DSH_LLM_BASE_URL
+        models:
+          - id: deepseek-v4.1-flash
+          - id: another-model
+```
+
+Only a loopback browser gets the editable Models UI (an SSH tunnel to the
+container port presents one).
+
 ## Persistence layout
 
 ```
@@ -232,6 +264,7 @@ release against a copy of the volume before rolling it out.
 | Model requests fail | `curl -H "Authorization: Bearer $DSH_LLM_API_KEY" "$DSH_LLM_BASE_URL/models"` from inside the container; check base URL, key and model id |
 | `MISSING_CREDENTIAL` | `DSH_LLM_API_KEY` is unset in the application environment |
 | First-visit URL missing | The server may not have reached readiness; inspect `$DSH_HOME/logs/boot-*.log` |
+| "Loading the provider directory failed: settings are unavailable in this browser" | Expected upstream behavior for non-loopback origins; edit `$DSH_HOME/profiles/web/cordis.patch.yml` directly (HMR applies it) or use a loopback/SSH-tunnel browser |
 | Coolify API returns HTML or 500 while creating the app | Send `Accept: application/json`; Coolify encrypts the Basic Auth password into `varchar(255)`, so keep it ≤16 characters |
 | Healthcheck unhealthy | `GET /` must answer; check boot log and port env |
 | Plugin install fails in UI | `pnpm` is installed in the image; native builds use the bundled `build-essential` |
