@@ -163,6 +163,9 @@ default to its first model. No credentials are ever typed into the UI.
 | `DSH_COOKIE_MAX_AGE_DAYS` | `365` | Browser-session cookie lifetime |
 | `DSH_LLM_BASE_URL` | `https://api.deepseek.com/v1` | OpenAI-compatible API root |
 | `DSH_LLM_API_KEY` | – | Bearer token (credential reference `DSH_LLM_API_KEY`) |
+| `DSH_AMD_API_KEY` | – | AMD Radeon developer API token |
+| `DSH_OPENCODE_API_KEY` | – | OpenCode Zen token (`x-opencode-session` header is in the patch) |
+| `DSH_CLINE_API_KEY` | – | ClinePass token (route commented out until the account balance is positive) |
 | `DSH_LLM_CONTEXT_WINDOW` | `131072` | Fallback context capacity for models without one |
 | `DSH_LLM_MAX_OUTPUT_TOKENS` | `8192` | Fallback output cap for models without one |
 | `DSH_TELEMETRY_DISABLED` | `1` | Disables OTel delivery |
@@ -176,13 +179,22 @@ applies default-model edits live; provider-route edits need the restart.
 
 ## Model gateway notes
 
-- The seeded catalogue copies the pi agent's `cheapestinference-gateway`
-  provider: `deepseek-v4.1-flash` (1M context) and `mimo-v2.6-flash`
-  (1M context, image input), with their reasoning levels and compatibility
-  switches. Edit `$DSH_HOME/profiles/web/cordis.patch.yml` to add or remove
-  models, then restart the container (`docker restart <container>`) — on
-  0.2.0-rc.2 the `llm-pi-ai` provider route does not re-register on a hot
-  patch edit.
+- The seeded catalogue consolidates every MiMo V2.6 Flash / DeepSeek V4.1
+  source from the pi agent's provider list:
+
+  | Provider | Models |
+  |---|---|
+  | CI Gateway (queue) | `deepseek-v4.1-flash`, `mimo-v2.6-flash` |
+  | AMD Radeon | `DeepSeek-V4.1-Flash`, `MiMo-V2.6-Flash` |
+  | OpenCode Go | `deepseek-v4.1-flash` |
+  | ClinePass | `deepseek/deepseek-v4.1-flash`, `xiaomi/mimo-v2.6-flash` (commented out: HTTP 402 balance) |
+
+  The misnamed, unconfigured official DeepSeek entries (`DeepSeek-V41-Flash`,
+  `DeepSeek-V4-Pro`) are hidden by `llm-deepseek: disabled`; remove that row
+  (or set `DEEPSEEK_API_KEY`) to bring them back. Edit
+  `$DSH_HOME/profiles/web/cordis.patch.yml` to add or remove models, then
+  restart the container (`docker restart <container>`) — on 0.2.0-rc.2 the
+  `llm-pi-ai` provider routes do not re-register on a hot patch edit.
 - The route uses **OpenAI Chat Completions** (`openai-completions`), which
   covers the DeepSeek official API, a CheapestInference/queue gateway, LiteLLM,
   vLLM, OpenRouter and similar relays.
