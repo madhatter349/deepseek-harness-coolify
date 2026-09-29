@@ -1,0 +1,37 @@
+# First-boot seed for $DSH_HOME/profiles/web/cordis.patch.yml.
+#
+# Everything model-specific is read from the environment:
+#
+#   DSH_LLM_BASE_URL           OpenAI-compatible API root, e.g.
+#                              https://inference.example.com/v1
+#                              https://api.deepseek.com/v1
+#   DSH_LLM_API_KEY            bearer token (credential reference only —
+#                              never written to any file by this image)
+#   DSH_LLM_MODELS             comma-separated model ids
+#   DSH_LLM_PROVIDER_NAME      display label in the Models page
+#   DSH_LLM_CONTEXT_WINDOW     fallback context capacity in tokens
+#   DSH_LLM_MAX_OUTPUT_TOKENS  fallback output capacity in tokens
+#
+# The route id `dsh-gateway` is also the default for new sessions. This file
+# is seeded once; later edits through Settings → Models persist on the volume.
+#
+# NOTE: `dsh-llm-pi-ai` speaks one wire protocol per route. This one uses
+# `openai-completions`, which covers the DeepSeek official API, the
+# CheapestInference gateway and any OpenAI Chat Completions relay.
+
+- id: llm-pi-ai
+  config:
+    providers:
+      dsh-gateway:
+        apiKeyEnv: DSH_LLM_API_KEY
+        displayName: !!js process.env.DSH_LLM_PROVIDER_NAME ?? 'DSH Gateway'
+        api: openai-completions
+        baseURL: !!js process.env.DSH_LLM_BASE_URL ?? 'https://api.deepseek.com/v1'
+        defaultContextWindow: !!js Number(process.env.DSH_LLM_CONTEXT_WINDOW ?? 131072)
+        defaultMaxTokens: !!js Number(process.env.DSH_LLM_MAX_OUTPUT_TOKENS ?? 8192)
+        models: !!js "(process.env.DSH_LLM_MODELS ?? 'deepseek-v4.1-flash').split(',').map(s => ({ id: s.trim() })).filter(m => m.id.length > 0)"
+
+- id: agent-default-model
+  config:
+    provider: dsh-gateway
+    model: !!js ((process.env.DSH_LLM_MODELS ?? 'deepseek-v4.1-flash').split(',')[0] ?? 'deepseek-v4.1-flash').trim()

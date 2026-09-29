@@ -1,0 +1,41 @@
+# Local / single-host Compose deployment for DeepSeek Harness.
+#
+# Coolify note: Coolify's Compose resources can consume this file directly.
+# Remove (or comment) the `ports` block for Coolify — Coolify/Traefik connects
+# over the Docker network and publishes the domain with TLS itself.
+#
+# This file exists for local verification and for a plain-VPS fallback; the
+# strongly recommended Coolify path is a Dockerfile application (see README).
+
+services:
+  dsh:
+    build:
+      context: .
+      args:
+        DSH_VERSION: ${DSH_VERSION:-0.2.0-rc.2}
+    image: deepseek-harness-coolify:local
+    container_name: deepseek-harness-local
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Keep the in-container layout independent of the operator's .env file.
+      DSH_HOME: /data/dsh-home
+      DSH_WORKSPACE_DIR: /data/workspace
+      PORT: "3080"
+    volumes:
+      - dsh-data:/data
+    # Local testing only. Bind to loopback; never publish this directly.
+    ports:
+      - "${DSH_HOST_BIND:-127.0.0.1}:${DSH_HOST_PORT:-13080}:3080"
+    healthcheck:
+      test: ["CMD", "/opt/dsh-deploy/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    stop_grace_period: 30s
+
+volumes:
+  dsh-data:
+    name: deepseek-harness-data

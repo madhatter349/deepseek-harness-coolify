@@ -1,0 +1,40 @@
+# DeepSeek Harness deployment overlay.
+#
+# Applied last by `dsh web --patch /opt/dsh-deploy/cordis.deploy.yml`, so it
+# outranks the shipped bundle and the user's own patches for the rows it names.
+# Every value is read from the process environment at boot.
+#
+# Cordis patch semantics: a patch replaces the targeted row's complete config,
+# not individual keys. Each row below therefore restates every key it owns.
+
+# ── HTTP listener ────────────────────────────────────────────────────────────
+# The official CLI refuses `--host 0.0.0.0` because a bare host process would
+# expose remote code execution to the LAN. Inside this container the bind is
+# confined to the private Docker network: the port is never published on the
+# host, Coolify/Traefik is the only reachable client, and the browser-session
+# auth below still gates every request.
+- id: webserver
+  config:
+    host: '0.0.0.0'
+    port: !!js Number(process.env.PORT ?? 3080)
+    compression: gzip
+    compressionLevel: 1
+    compressionThresholdBytes: 1024
+
+# ── Browser trust fence and session cookies ──────────────────────────────────
+# trustedHosts must contain the public authority Traefik forwards as the Host
+# header (the deployment domain, no scheme). Loopback is always trusted, which
+# is what the container healthcheck relies on.
+- id: connection
+  config:
+    trustedHosts: !!js (process.env.DSH_TRUSTED_HOSTS ?? '').split(',').map(s => s.trim()).filter(Boolean)
+    cookieMaxAgeDays: !!js Number(process.env.DSH_COOKIE_MAX_AGE_DAYS ?? 365)
+
+# ── Privacy defaults ─────────────────────────────────────────────────────────
+# The DeepSeek session-log contributor shares unaccepted session logs with
+# DeepSeek's official API when the official adapter is used. This deployment
+# talks to an env-configured gateway instead, so upload defaults off and can
+# be re-enabled with DSH_SESSION_LOG_UPLOAD=1.
+- id: session-log-deepseek
+  config:
+    enabled: !!js process.env.DSH_SESSION_LOG_UPLOAD === '1'
