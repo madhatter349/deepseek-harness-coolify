@@ -232,5 +232,6 @@ release against a copy of the volume before rolling it out.
 | Model requests fail | `curl -H "Authorization: Bearer $DSH_LLM_API_KEY" "$DSH_LLM_BASE_URL/models"` from inside the container; check base URL, key and model id |
 | `MISSING_CREDENTIAL` | `DSH_LLM_API_KEY` is unset in the application environment |
 | First-visit URL missing | The server may not have reached readiness; inspect `$DSH_HOME/logs/boot-*.log` |
+| Coolify API returns HTML or 500 while creating the app | Send `Accept: application/json`; Coolify encrypts the Basic Auth password into `varchar(255)`, so keep it ≤16 characters |
 | Healthcheck unhealthy | `GET /` must answer; check boot log and port env |
 | Plugin install fails in UI | `pnpm` is installed in the image; native builds use the bundled `build-essential` |

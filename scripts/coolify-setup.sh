@@ -23,6 +23,13 @@ set -euo pipefail
 : "${BASIC_AUTH_USER:?}" "${BASIC_AUTH_PASSWORD:?}"
 : "${DSH_LLM_BASE_URL:?}" "${DSH_LLM_API_KEY:?}" "${DSH_LLM_MODELS:?}"
 
+# Coolify encrypts the Basic Auth password into a varchar(255) column; values
+# longer than ~16 characters overflow the insert and the API returns a 500.
+if [ "${#BASIC_AUTH_PASSWORD}" -gt 16 ]; then
+  echo "BASIC_AUTH_PASSWORD must be 16 characters or fewer (Coolify stores it encrypted in varchar(255))." >&2
+  exit 1
+fi
+
 COOLIFY_URL="${COOLIFY_URL%/}"
 project_name="${COOLIFY_PROJECT:-DeepSeek Harness}"
 app_name="${APP_NAME:-deepseek-harness}"
@@ -32,10 +39,12 @@ api() {
   if [ -n "$body" ]; then
     curl -sS -X "$method" "$COOLIFY_URL/api/v1$path" \
       -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+      -H 'Accept: application/json' \
       -H 'Content-Type: application/json' -d "$body"
   else
     curl -sS -X "$method" "$COOLIFY_URL/api/v1$path" \
-      -H "Authorization: Bearer $COOLIFY_API_TOKEN"
+      -H "Authorization: Bearer $COOLIFY_API_TOKEN" \
+      -H 'Accept: application/json'
   fi
 }
 
